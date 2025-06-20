@@ -1,6 +1,8 @@
 import asyncio
 import json
 from typing import Any, Dict, List, Optional
+import os
+from dotenv import load_dotenv
 
 from regex import P
 from crawl4ai import LLMConfig
@@ -20,6 +22,12 @@ from pathlib import Path
 from pydantic import BaseModel
 
 __current_dir = Path(__file__).parent
+
+# Load environment variables from .env file
+load_dotenv()  
+
+# Get the API key
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # Crawl4ai Hello Web
 async def little_hello_web():
@@ -173,10 +181,9 @@ async def build_schema(html:str, force: bool = False) -> Dict[str, Any]:
             }""",
             query="""The given html is the crawled html from Google search result. Please find the schema for organic search item in the given html, I am interested in title, link, snippet text, sitelinks and date. Usually they are all inside a div#search.""",
             llm_config=LLMConfig(
-                provider="openai/gpt-4o",  # or whichever AI model you're using
-            #   api_token="",
-                api_token="",
-              
+                provider="openai/gpt-4o-mini",
+                api_token=openai_api_key,  # Using the key from .env
+                # input_format="markdown",   # or "html", "fit_markdown"
             )
         )
 
@@ -255,9 +262,13 @@ async def search(q: str = "apple inc") -> Dict[str, Any]:
             delay_before_return_html=2,
         )
         from urllib.parse import quote
+        # result: CrawlResult = await crawler.arun(
+        #     f"https://www.google.com/search?q={quote(q)}&start=0&num=10",
+        #     config=crawl_config
+        # )
         result: CrawlResult = await crawler.arun(
-            f"https://www.google.com/search?q={quote(q)}&start=0&num=10",
-            config=crawl_config
+            f"https://www.google.com/search?q={quote(q)}&hl=it&gl=it&start=0&num=10",
+            config=crawl_config,
         )
 
         if result.success:
